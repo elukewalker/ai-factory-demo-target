@@ -39,3 +39,38 @@ def calculate_risk_score(event: dict) -> float:
 
     # Cap at 1.0
     return min(score, 1.0)
+
+
+def enrich_event(event: dict) -> dict:
+    """Enrich a security event with risk score and derived triage fields.
+
+    Args:
+        event: A security event dictionary.
+
+    Returns:
+        dict: A new dictionary containing all original event keys plus:
+            - risk_score (float): Calculated risk score [0.0, 1.0]
+            - priority (str): "P1", "P2", "P3", or "P4"
+            - recommended_action (str): Triage instruction
+            - escalate (bool): True if P1 or P2, False otherwise
+    """
+    risk_score = calculate_risk_score(event)
+
+    # Determine priority and action based on risk score
+    if risk_score >= 0.8:
+        priority, recommended_action = "P1", "Page on-call immediately"
+    elif risk_score >= 0.5:
+        priority, recommended_action = "P2", "Investigate within 1 hour"
+    elif risk_score >= 0.2:
+        priority, recommended_action = "P3", "Investigate within 24 hours"
+    else:
+        priority, recommended_action = "P4", "Log and monitor"
+
+    # Return new dict with original keys + derived fields
+    return {
+        **event,
+        "risk_score": risk_score,
+        "priority": priority,
+        "recommended_action": recommended_action,
+        "escalate": priority in ("P1", "P2"),
+    }
