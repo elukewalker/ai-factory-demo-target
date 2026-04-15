@@ -18,4 +18,24 @@ def calculate_risk_score(event: dict) -> float:
     Returns:
         float: Risk score in [0.0, 1.0].
     """
-    pass
+    score = 0.0
+
+    # Severity contributions
+    severity = event.get("severity", "")
+    if severity == "critical":
+        score += 0.5
+    elif severity == "high":
+        score += 0.3
+    elif severity == "medium":
+        score += 0.1
+
+    # Flag contributions
+    if event.get("privileged") is True:
+        score += 0.3
+    if event.get("external_origin") is True:
+        score += 0.2
+    if event.get("repeated") is True:
+        score += 0.1
+
+    # Cap at 1.0
+    return min(score, 1.0)
